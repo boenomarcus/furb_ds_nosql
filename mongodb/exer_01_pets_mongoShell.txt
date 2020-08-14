@@ -1,0 +1,38 @@
+
+
+# -- Inserindo documentos na coleção "pets" da database "petshop"
+use petshop
+db.pets.insert({name: 'Mike', species: 'Hamster'})
+db.pets.insert({name: 'Dolly', species: 'Peixe'})
+db.pets.insert({name: 'Kilha', species: 'Gato'})
+db.pets.insert({name: 'Mike', species: 'Cachorro'})
+db.pets.insert({name: 'Sally', species: 'Cachorro'})
+db.pets.insert({name: 'Chuck', species: 'Gato'})
+
+# ----- Querys
+
+# -- Exercicio 1.1
+db.pets.insert({species: 'Peixe'})
+db.pets.insert({name: 'Frodo', species: 'Hamster'})
+
+# -- Exercicio 1.2
+db.pets.count()
+
+# -- Exercicio 1.3
+db.pets.findOne()
+
+# -- Exercicio 1.4
+db.pets.find({name:'Kilha', species:'Gato'})[0]._id
+
+# -- Exercicio 1.5
+var mikeHamster_ID = db.pets.find({name:'Mike', species:'Hamster'})[0]._id
+db.pets.find({_id:mikeHamster_ID})
+
+# -- Exercicio 1.6
+db.pets.find({species:'Hamster'})
+
+# -- Exercicio 1.7
+db.pets.find({name:'Mike'})
+
+# -- Exercicio 1.8
+db.pets.find({name:'Mike', species:'Cachorro'})

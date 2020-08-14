@@ -1,0 +1,115 @@
+# Exercício 3 - Stockbrokers
+
+# -- Exercicio 3.1
+db.stocks.aggregate([
+    {'$match': {'Profit Margin': {'$gt': 0.5}}},
+    {'$project': {
+        '_id': 0,
+        'Company': 1,
+        'Industry': 1,
+        'Profit Margin': 1
+    }},
+    {'$limit': 10}
+])
+
+
+# -- Exercicio 3.2
+db.stocks.aggregate([
+    {'$match': {'Profit Margin': {'$lt': 0}}},
+    {'$project': {
+        '_id': 0,
+        'Company': 1,
+        'Industry': 1,
+        'Profit Margin': 1
+    }},
+    {'$limit': 10}
+])
+
+# -- Exercicio 3.3
+db.stocks.aggregate([
+    {'$project': {
+        '_id': 0,
+        'Company': 1,
+        'Industry': 1,
+        'Profit Margin': 1
+    }},
+    {'$sort': {'Profit Margin': -1}},
+    {'$limit': 10}
+])
+
+
+# -- Exercicio 3.4
+db.stocks.aggregate([
+    {'$group':{_id: '$Sector', 'Average Profit': {'$avg': '$Profit Margin'} }},
+    {'$sort': {'Average Profit': -1}},
+    {'$limit': 1}
+])
+
+
+# -- Exercicio 3.5
+
+# Cria cursor com ações ordenadas por lucro de forma decrescente
+var cursor = db.stocks.aggregate([
+    {'$match': {'Profit Margin': {'$exists': true}}},
+    {'$project': {'Ticker': 1, 'Profit Margin': 1, 'Company': 1}},
+    {'$sort': {'Profit Margin': -1}}
+])
+
+# Lista próxima entrada do cursor
+cursor.next()
+
+
+# -- Exercicio 3.6
+
+# Renomeia o campo "Profit Margin" para "profit"
+db.stocks.updateMany(
+    {'Profit Margin': {'$exists': true}},
+    {'$rename': {'Profit Margin': 'profit'}}
+)
+
+# Busca 3 registros para verficar a operação
+db.stocks.find(
+    {'profit': {'$exists': true}},
+    {'profit': 1, 'Ticker': 1, 'Company': 1, '_id': 0}
+).limit(3)
+
+
+# -- Exercicio 3.7
+db.stocks.find(
+    {'profit': {'$exists': true}},
+    {'Company': 1, 'profit': 1, '_id': 0}
+)
+
+
+# -- Exercicio 3.8
+
+# A de melhor performance no ano
+db.stocks.aggregate([
+    {'$match': {'Performance (Year)': {'$exists': true}}},
+    {'$project': {'_id': 0, 'Ticker': 1, 'Company': 1, 'Performance (Year)': 1, 'profit': 1}},
+    {'$sort': {'Performance (Year)': -1}},
+    {'$limit': 1}
+])
+
+# A de melhor performance atual
+db.stocks.aggregate([
+    {'$match': {'profit': {'$exists': true}}},
+    {'$project': {'_id': 0, 'Ticker': 1, 'Company': 1, 'profit': 1}},
+    {'$sort': {'profit': -1}},
+    {'$limit': 1}
+])
+
+# A de maior retorno de dividendos
+db.stocks.aggregate([
+    {'$match': {'Dividend Yield': {'$exists': true}}},
+    {'$project': {'_id': 0, 'Ticker': 1, 'Company': 1, 'Dividend Yield': 1, 'profit': 1}},
+    {'$sort': {'Dividend Yield': -1}},
+    {'$limit': 1}
+])
+
+
+# -- Exercicio 3.9
+var cursor = db.stocks.aggregate([
+    {'$match': {'Sector': {'$exists': true}}},
+    {'$group': {'_id': '$Sector', stocks: {'$addToSet': '$Ticker'}}}
+])

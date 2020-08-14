@@ -1,0 +1,187 @@
+# Exercício 2 - Mamma Mia!
+
+# -- Exercicio 2.1
+db.italians.count({age:99})
+
+
+# -- Exercicio 2.2
+db.italians.count({age:{'$gt':65}})
+
+
+# -- Exercicio 2.3
+db.italians.count({age:{'$gte':12, '$lte':18}})
+
+
+# -- Exercicio 2.4
+
+# Pessoas que tem gato: 
+db.italians.count({cat:{'$exists':true}})
+
+# Pessoas que tem cachorro: 
+db.italians.count({dog:{'$exists':true}})
+
+# Pessoas que não tem gato nem cachorro: 
+db.italians.count({cat:{'$exists':false}, dog:{'$exists':false}})
+
+
+# -- Exercicio 2.5
+db.italians.count({age:{'$gt':60}, cat:{$exists:true}})
+
+
+# -- Exercicio 2.6
+db.italians.count({age:{'$gte':12, '$lte':18}, dog:{$exists:true}})
+
+
+# -- Exercicio 2.7
+db.italians.count({'$and': [{$where: '"cat" in this'}, {$where: '"dog" in this'}]})
+
+
+# -- Exercicio 2.8
+db.italians.count({'$and': [{$where: '"cat" in this'}, { $where: 'this.age < this.cat.age'}]})
+# ou
+db.italians.count({$expr: {$gt: ['$cat.age', '$age']}})
+
+
+# -- Exercicio 2.9
+db.italians.find({
+    $where: function(){
+        return (self.dog && this.dog.name == this.firstname) || (this.cat && this.cat.name == this.firstname)
+        }
+    }
+).count()
+
+
+# -- Exercicio 2.10
+db.italians.find(
+    {bloodType: {$regex:/-/}}, 
+    {firstname: 1, surname: 1, bloodType: 1}
+)
+
+
+# -- Exercicio 2.11
+db.italians.find(
+    {'$or': [{cat: {'$exists': true}}, {dog: {'$exists': true}}]},
+    {cat: 1, dog: 1, _id: 0}
+)
+
+
+# -- Exercicio 2.12
+db.italians.find(
+    {surname: 'Rossi'}, 
+    {_id: 1, age: 1, firstname: 1, surname: 1}
+).sort({age: -1}).limit(5)
+
+
+# -- Exercicio 2.13
+db.italians.insert(
+    {
+        firstname: 'Enzo', surname: 'Gorlomi', username: 'user10001',
+        age: 37, email: 'enzogorlomi@outlook.com', bloodType: 'AB',
+        idNum: '182749781239', registerDate: new Date(), ticketNumber: 2387,
+        jobs: ['Analista de Dados Geoespaciais'],
+        favFruits: ['Melancia', 'Melão'],
+        movies:{title: 'Inglorious Basterds (2009)', rating: 8.30},
+        lion:{name: 'Simba', age: '7'}
+    }
+)
+
+
+# -- Exercicio 2.14
+
+# Query para encontrar ID do italiano em questão:
+var italian_with_lion_ID = db.italians.find({
+    lion: {'$exists':true}, 
+    firstname: 'Enzo', 
+    surname: 'Gorlomi'
+})[0]['_id']
+
+# Query para remover o italiano em questão usando o ID:
+db.italians.deleteOne({_id: italian_with_lion_ID})
+
+
+# -- Exercicio 2.15
+
+# Atualiza idade dos italianos, dos seus pais e dos pets (Gato/Cachorro)
+db.italians.updateMany({},{'$inc': {'age': 1}})
+db.italians.updateMany({father: {'$exists': true}}, {'$inc': {'age': 1}})
+db.italians.updateMany({mother: {'$exists': true}}, {'$inc': {'age': 1}})
+db.italians.updateMany({cat: {'$exists': true}}, {'$inc': {'age': 1}})
+db.italians.updateMany({dog: {'$exists': true}}, {'$inc': {'age': 1}})
+
+
+# -- Exercicio 2.16
+db.italians.deleteMany({cat: {'$exists': true}, age: 66})
+
+
+# -- Exercicio 2.17
+db.italians.aggregate([
+    {'$match': {'$or': [
+        {cat:{'$exists': true}}, 
+        {dog: {'$exists': true}}
+        ]}
+    },
+    {'$match': { mother: {'$exists':true}}},
+    {'$project': {
+        'firstname': 1, 
+        'mother.firstname': 1, 
+        'cat.name': 1, 
+        'dog.name': 1, 
+        'isEqual': {'$cmp': ['$firstname','$mother.firstname']}
+        }
+    },
+    {'$match':{'isEqual': 0}}])
+
+
+# -- Exercicio 2.18
+
+# Total de nomes únicos
+db.italians.aggregate([
+    {'$project': {'firstname': 1}},
+    {'$group': {_id: '$firstname'}},
+    {'$count': "unique_italian_firstnames"}
+])
+
+# Lista de nomes únicos e sua frequencia (Frequencia decrescente)
+db.italians.aggregate([
+    {'$project': {'firstname': 1}},
+    {'$group': {_id: '$firstname', total: {'$sum': 1}}},
+    {'$sort':{total:-1}}
+])
+
+
+# -- Exercicio 2.19
+
+# Total de nomes únicos
+db.italians.aggregate([
+    {'$project': {'firstname': 1, 'surname': 1, 'fullname':{'$concat': ['$firstname', ' ', '$surname']}}},
+    {'$group': {_id: '$fullname'}},
+    {'$count': "unique_italian_fullnames"}
+])
+
+# Lista de nomes únicos e sua frequencia (Frequencia decrescente)
+db.italians.aggregate([
+    {'$project': {'firstname': 1, 'surname': 1, 'fullname':{'$concat': ['$firstname', ' ', '$surname']}}},
+    {'$group': {_id: '$fullname', total: {'$sum': 1}}},
+    {'$sort':{total:-1}}
+])
+
+
+# -- Exercicio 2.20
+db.italians.aggregate([
+    {'$match': {age: {'$gt':20, '$lt':60}} },
+    {'$match': {
+        '$or': [{cat:{'$exists': true}}, {dog: {'$exists': true}}],
+        favFruits: {'$exists': true}
+        }
+    },
+    {'$project': {
+        '_id': 0,
+        'firstname': 1, 
+        'cat.name': 1, 
+        'dog.name': 1, 
+        'favFruits': 1,
+        'bananaMaca': {'$or':[{'$in': ['Banana', '$favFruits']}, {'$in': ['Maçã', '$favFruits']}]}
+        }
+    },
+    {'$match': {'bananaMaca': true}}
+])
